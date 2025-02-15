@@ -44,7 +44,7 @@ JWT_SECRET=your_jwt_secret_key
 
 4. Start the server
 ```bash
-npm start
+npm run dev
 ```
 
 ## API Endpoints
