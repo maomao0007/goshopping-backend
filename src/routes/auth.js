@@ -34,7 +34,7 @@ router.post("/register", async (req, res) => {
     res.status(201).json({
       status: "success",
       user: newUser.rows[0],
-      token
+      token,
     });
   } catch (err) {
     res.status(500).json({
@@ -46,7 +46,6 @@ router.post("/register", async (req, res) => {
 
 router.post("/login", async (req, res) => {
   try {
-
     const { email, password } = req.body;
 
     const user = await pool.query("SELECT * FROM users WHERE email = $1", [
@@ -63,11 +62,11 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-     const token = jwt.sign(
-       { userId: user.rows[0].id },
-       process.env.JWT_SECRET,
-       { expiresIn: "24h" }
-     );
+    const token = jwt.sign(
+      { userId: user.rows[0].id },
+      process.env.JWT_SECRET,
+      { expiresIn: "24h" }
+    );
 
     res.json({
       status: "success",
@@ -76,7 +75,7 @@ router.post("/login", async (req, res) => {
         email: user.rows[0].email,
         username: user.rows[0].username,
       },
-      token
+      token,
     });
   } catch (err) {
     console.error(err.message);
@@ -103,5 +102,30 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+router.get("/profile", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    const result = await pool.query(
+      "SELECT id, username, email, created_at FROM users WHERE id = $1",
+      [userId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({
+      status: "success",
+      user: result.rows[0],
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "error",
+      message: "Server Error",
+    });
+  }
+});
 
 module.exports = router;
